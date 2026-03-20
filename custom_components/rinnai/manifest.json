@@ -1,0 +1,13 @@
+{
+  "domain": "rinnai",
+  "name": "Rinnai Boiler",
+  "version": "1.0.0",
+  "documentation": "https://github.com/zobithecat/rinnai-ha",
+  "issue_tracker": "https://github.com/zobithecat/rinnai-ha/issues",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": ["@zobithecat"],
+  "iot_class": "cloud_polling",
+  "config_flow": true,
+  "integration_type": "device"
+}
