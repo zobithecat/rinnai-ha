@@ -24,20 +24,22 @@ def _hash_password(password: str) -> str:
     ).decode().strip()
 
 
-def _ssl_context():
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    return ctx
-
-
 class RinnaiAPI:
     def __init__(self, email: str, password: str):
         self._email = email
         self._password = password
         self._device_id: str = None
         self._room_control_id: str = None
-        self._ctx = _ssl_context()
+        self._ctx = None  # lazy init — 이벤트 루프 블로킹 방지
+
+    def _get_ctx(self):
+        """SSLContext lazy init. create_default_context()는 blocking I/O 발생"""
+        if self._ctx is None:
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            self._ctx = ctx
+        return self._ctx
 
     # ──────────────────────────────────────────────
     # 내부 HTTP 헬퍼
@@ -52,7 +54,7 @@ class RinnaiAPI:
                 "Accept": "application/json",
             },
         )
-        with urllib.request.urlopen(req, context=self._ctx) as res:
+        with urllib.request.urlopen(req, context=self._get_ctx()) as res:
             return json.loads(res.read())
 
     def _post_plain(self, url: str, body: str) -> str:
@@ -66,7 +68,7 @@ class RinnaiAPI:
                 "DeviceId": self._device_id,
             },
         )
-        with urllib.request.urlopen(req, context=self._ctx) as res:
+        with urllib.request.urlopen(req, context=self._get_ctx()) as res:
             return res.read().decode()
 
     # ──────────────────────────────────────────────
